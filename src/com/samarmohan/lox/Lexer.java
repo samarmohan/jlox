@@ -1,19 +1,22 @@
 package com.samarmohan.lox;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.samarmohan.lox.TokenType.*;
 
 class Lexer {
     private final String source;
     private final List<Token> tokens = new ArrayList<>();
+    private final static Map<String, TokenType> keywords = new HashMap<>();
 
     private int start = 0;
     private int current = 0;
     private int line = 1;
 
-    Lexer(String source) {
+    Lexer(String source)  {
         this.source = source;
     }
 
@@ -135,13 +138,40 @@ class Lexer {
                 string();
                 break;
             default:
-                if (isDigit(c)) {
+                if (isNumeric(c)) {
                     number();
-                } else {
+                } else if (isAlpha(c)) {
+                    identifier();
+                } else  {
                     Lox.error(c, "Unexpected character");
                 }
                 break;
         }
+    }
+
+    private boolean isNumeric(char c) {
+        return c >= '0' && c <= '9';
+    }
+
+    private boolean isAlpha(char c) {
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+    }
+
+    private boolean isAlphaNumeric(char c) {
+        return isAlpha(c) || isNumeric(c);
+    }
+
+    private void number() {
+        while (isNumeric(peek()))
+            advance();
+
+        if (peek() == '.' && isNumeric(peekTwice())) {
+            advance();
+            while (isNumeric(peek()))
+                advance();
+        }
+        addToken(NUMBER,
+                Double.parseDouble(source.substring(start, current)));
     }
 
     private void string() {
@@ -160,20 +190,7 @@ class Lexer {
         addToken(STRING, value);
     }
 
-    private boolean isDigit(char c) {
-        return c >= '0' && c <= '9';
-    }
-
-    private void number() {
-        while (isDigit(peek()))
-            advance();
-
-        if (peek() == '.' && isDigit(peekTwice())) {
-            advance();
-            while (isDigit(peek()))
-                advance();
-        }
-        addToken(NUMBER,
-                Double.parseDouble(source.substring(start, current)));
+    private void identifier() {
+        while (isAlphaNumeric(peek())) advance();
     }
 }
