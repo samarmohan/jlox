@@ -10,6 +10,7 @@ import java.util.List;
 
 public class Lox {
     static boolean hadError = false;
+
     public static void main(String[] args) throws Exception {
         if (args.length > 1) {
             System.out.println("Usage: jlox [script]");
@@ -31,10 +32,10 @@ public class Lox {
         InputStreamReader input = new InputStreamReader(System.in);
         BufferedReader reader = new BufferedReader(input);
 
-        for (;;) {
+        for (; ; ) {
             System.out.println("> ");
             String line = reader.readLine();
-            if (line == null || line == "\\c")
+            if (line == null || line.equals("\\c"))
                 break;
             run(line);
             hadError = false;
@@ -55,7 +56,7 @@ public class Lox {
     }
 
     static void report(int line, String where, String message) {
-        System.err.println("[line + " + line + "] Error" + where + ": " + message);
+        System.err.println("[line " + line + "] Error" + where + ": " + message);
         hadError = true;
     }
 }

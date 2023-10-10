@@ -12,11 +12,30 @@ class Lexer {
     private final List<Token> tokens = new ArrayList<>();
     private final static Map<String, TokenType> keywords = new HashMap<>();
 
+    static {
+        keywords.put("and", AND);
+        keywords.put("class", CLASS);
+        keywords.put("else", ELSE);
+        keywords.put("false", FALSE);
+        keywords.put("for", FOR);
+        keywords.put("fn", FUNCTION);
+        keywords.put("if", IF);
+        keywords.put("null", NULL);
+        keywords.put("or", OR);
+        keywords.put("print", PRINT);
+        keywords.put("return", RETURN);
+        keywords.put("super", SUPER);
+        keywords.put("this", THIS);
+        keywords.put("true", TRUE);
+        keywords.put("var", VAR);
+        keywords.put("while", WHILE);
+    }
+
     private int start = 0;
     private int current = 0;
     private int line = 1;
 
-    Lexer(String source)  {
+    Lexer(String source) {
         this.source = source;
     }
 
@@ -35,8 +54,7 @@ class Lexer {
     }
 
     private char advance() {
-        current++;
-        return source.charAt(current - 1);
+        return source.charAt(current++);
     }
 
     private void addToken(TokenType type) {
@@ -49,23 +67,19 @@ class Lexer {
     }
 
     private boolean match(char expected) {
-        if (isAtEnd())
-            return false;
-        if (source.charAt(current) != expected)
-            return false;
+        if (isAtEnd()) return false;
+        if (source.charAt(current) != expected) return false;
         current++;
         return true;
     }
 
     private char peek() {
-        if (isAtEnd())
-            return '\0';
+        if (isAtEnd()) return '\0';
         return source.charAt(current);
     }
 
     private char peekTwice() {
-        if (current + 1 >= source.length())
-            return '\0';
+        if (current + 1 >= source.length()) return '\0';
         return source.charAt(current + 1);
     }
 
@@ -119,8 +133,7 @@ class Lexer {
             // comments or slash
             case '/':
                 if (match('/')) {
-                    while (peek() != '\n' && !isAtEnd())
-                        advance();
+                    while (peek() != '\n' && !isAtEnd()) advance();
                 } else {
                     addToken(SLASH);
                 }
@@ -142,7 +155,7 @@ class Lexer {
                     number();
                 } else if (isAlpha(c)) {
                     identifier();
-                } else  {
+                } else {
                     Lox.error(c, "Unexpected character");
                 }
                 break;
@@ -162,29 +175,27 @@ class Lexer {
     }
 
     private void number() {
-        while (isNumeric(peek()))
-            advance();
+        while (isNumeric(peek())) advance();
 
         if (peek() == '.' && isNumeric(peekTwice())) {
             advance();
-            while (isNumeric(peek()))
-                advance();
+            while (isNumeric(peek())) advance();
         }
-        addToken(NUMBER,
-                Double.parseDouble(source.substring(start, current)));
+        addToken(NUMBER, Double.parseDouble(source.substring(start, current)));
     }
 
     private void string() {
         while (peek() != '"' && !isAtEnd()) {
-            if (peek() == '\n')
-                line++;
+            if (peek() == '\n') line++;
             advance();
         }
 
         if (isAtEnd()) {
-            Lox.error(line, "Unterminated string");
+            Lox.error(line, "reached end");
             return;
         }
+
+        advance();
 
         String value = source.substring(start + 1, current - 1);
         addToken(STRING, value);
@@ -192,5 +203,9 @@ class Lexer {
 
     private void identifier() {
         while (isAlphaNumeric(peek())) advance();
+        String text = source.substring(start, current);
+        TokenType type = keywords.get(text);
+        if (type == null) type = IDENTIFIER;
+        addToken(type);
     }
 }
